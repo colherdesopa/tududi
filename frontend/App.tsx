@@ -71,6 +71,14 @@ import {
     readStoredTheme,
     storeTheme,
 } from './constants/themes';
+import {
+    applyTextPreferences,
+    readStoredBoldText,
+    readStoredTextScale,
+    storeBoldText,
+    storeTextScale,
+    toTextScale,
+} from './constants/typography';
 import { sanitizeFocus } from './utils/focus';
 import { invalidateProfileCache } from './utils/profileService';
 import { notifySwSession, notifySwClearCache } from './utils/swUtils';
@@ -100,6 +108,7 @@ const AdminUsersPage = lazy(() => import('./components/Admin/AdminUsersPage'));
 // app does not flash the default palette. The profile replaces it with the
 // saved theme once it loads.
 applyTheme(readStoredTheme(), 'light');
+applyTextPreferences(readStoredTextScale(), readStoredBoldText());
 
 const App: React.FC = () => {
     const { i18n } = useTranslation();
@@ -190,6 +199,15 @@ const App: React.FC = () => {
                     data.user.ui_settings?.appearance?.customCss ?? ''
                 );
                 storeTheme(palette);
+                // The size of the text and its weight.
+                const textScale = toTextScale(
+                    data.user.ui_settings?.appearance?.textScale
+                );
+                const boldText =
+                    data.user.ui_settings?.appearance?.boldText === true;
+                applyTextPreferences(textScale, boldText);
+                storeTextScale(textScale);
+                storeBoldText(boldText);
                 useStore
                     .getState()
                     .userSettingsStore.setSidebarVisibleSections(

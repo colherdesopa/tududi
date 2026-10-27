@@ -39,6 +39,13 @@ import {
     storeTheme,
 } from '../../constants/themes';
 import {
+    applyTextPreferences,
+    DEFAULT_TEXT_SCALE,
+    storeBoldText,
+    storeTextScale,
+    toTextScale,
+} from '../../constants/typography';
+import {
     getTimezonesByRegion,
     getRegionDisplayName,
 } from '../../utils/timezoneUtils';
@@ -170,6 +177,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 palette: null,
                 customCss: '',
                 customCssName: '',
+                textScale: DEFAULT_TEXT_SCALE,
+                boldText: false,
             },
         },
         notification_preferences: null,
@@ -610,6 +619,11 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                             customCssName:
                                 data.ui_settings?.appearance?.customCssName ??
                                 '',
+                            textScale: toTextScale(
+                                data.ui_settings?.appearance?.textScale
+                            ),
+                            boldText:
+                                data.ui_settings?.appearance?.boldText === true,
                         },
                     },
                     notification_preferences:
@@ -730,15 +744,25 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     // saved. A theme has a light and a dark version, so it follows the mode.
     useEffect(() => {
         const appearance = formData.ui_settings?.appearance;
-        applyTheme(
-            appearance?.palette ?? null,
-            isDarkMode ? 'dark' : 'light'
-        );
+        applyTheme(appearance?.palette ?? null, isDarkMode ? 'dark' : 'light');
         applyCustomTheme(appearance?.customCss ?? '');
     }, [
         formData.ui_settings?.appearance?.palette,
         formData.ui_settings?.appearance?.customCss,
         isDarkMode,
+    ]);
+
+    // Paint the text as it is staged, so a size or a weight can be seen
+    // before it is saved.
+    useEffect(() => {
+        const appearance = formData.ui_settings?.appearance;
+        applyTextPreferences(
+            appearance?.textScale ?? DEFAULT_TEXT_SCALE,
+            appearance?.boldText === true
+        );
+    }, [
+        formData.ui_settings?.appearance?.textScale,
+        formData.ui_settings?.appearance?.boldText,
     ]);
 
     useEffect(() => {
@@ -1388,6 +1412,19 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 storeTheme(theme);
             }
 
+            if (
+                updatedProfile.ui_settings?.appearance?.textScale !== undefined
+            ) {
+                const scale = toTextScale(
+                    updatedProfile.ui_settings.appearance.textScale
+                );
+                const bold =
+                    updatedProfile.ui_settings.appearance.boldText === true;
+                applyTextPreferences(scale, bold);
+                storeTextScale(scale);
+                storeBoldText(bold);
+            }
+
             if (updatedProfile.sidebar_settings?.visibleSections) {
                 useStore
                     .getState()
@@ -1660,6 +1697,40 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             },
                                         }));
                                     }}
+                                    textScale={
+                                        formData.ui_settings?.appearance
+                                            ?.textScale ?? DEFAULT_TEXT_SCALE
+                                    }
+                                    onTextScaleChange={(scale) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            ui_settings: {
+                                                ...(prev.ui_settings || {}),
+                                                appearance: {
+                                                    ...(prev.ui_settings
+                                                        ?.appearance || {}),
+                                                    textScale: scale,
+                                                },
+                                            },
+                                        }))
+                                    }
+                                    boldText={
+                                        formData.ui_settings?.appearance
+                                            ?.boldText === true
+                                    }
+                                    onBoldTextChange={(bold) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            ui_settings: {
+                                                ...(prev.ui_settings || {}),
+                                                appearance: {
+                                                    ...(prev.ui_settings
+                                                        ?.appearance || {}),
+                                                    boldText: bold,
+                                                },
+                                            },
+                                        }))
+                                    }
                                 />
 
                                 <SecurityTab

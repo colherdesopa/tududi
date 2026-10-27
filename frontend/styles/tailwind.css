@@ -30,6 +30,43 @@
     /* Scale down everything by 10% by setting base font-size to 90% */
     font-size: 90%;
   }
+
+  /* The size of the text, chosen in Profile > Appearance > Customize.
+     The base size is the 90% above; the scale moves it from there, so
+     every size written in rem follows. */
+  html[data-text-scale='sm'] {
+    font-size: 80%;
+  }
+
+  html[data-text-scale='lg'] {
+    font-size: 100%;
+  }
+
+  html[data-text-scale='xl'] {
+    font-size: 112%;
+  }
+}
+
+/* Bolder text, for the user who wants to read the app at a glance. The rule
+   on the body carries the weight down to every text that does not ask for
+   one of its own; the rules below keep the utilities that name a weight in
+   step with it. */
+html[data-bold-text='on'] body {
+  font-weight: 600;
+}
+
+html[data-bold-text='on'] .font-light,
+html[data-bold-text='on'] .font-normal {
+  font-weight: 500;
+}
+
+html[data-bold-text='on'] .font-medium {
+  font-weight: 600;
+}
+
+html[data-bold-text='on'] .font-semibold,
+html[data-bold-text='on'] .font-bold {
+  font-weight: 700;
 }
 
 .spinner {

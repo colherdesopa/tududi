@@ -7,6 +7,8 @@ import {
     SwatchIcon,
     PhotoIcon,
     NoSymbolIcon,
+    PaintBrushIcon,
+    BoldIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import type { ProfileFormData } from '../types';
@@ -14,7 +16,11 @@ import {
     CONTENT_BACKGROUNDS,
     contentBackgroundUrl,
 } from '../../../constants/contentBackgrounds';
+import { THEMES, CUSTOM_THEME_ID } from '../../../constants/themes';
+import type { TextScale } from '../../../constants/typography';
 import ThemePicker from './ThemePicker';
+import TextOptions from './TextOptions';
+import CollapsibleSection from './CollapsibleSection';
 
 interface AppearanceTabProps {
     isActive: boolean;
@@ -27,6 +33,10 @@ interface AppearanceTabProps {
     customCss: string;
     customCssName: string;
     onCustomCssChange: (css: string, name: string) => void;
+    textScale: TextScale;
+    boldText: boolean;
+    onTextScaleChange: (scale: TextScale) => void;
+    onBoldTextChange: (bold: boolean) => void;
 }
 
 interface BackgroundCardProps {
@@ -93,10 +103,41 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
     customCss,
     customCssName,
     onCustomCssChange,
+    textScale,
+    boldText,
+    onTextScaleChange,
+    onBoldTextChange,
 }) => {
     const { t } = useTranslation();
 
     if (!isActive) return null;
+
+    // The name of the theme in use, so it stays visible while the section
+    // that holds it is closed.
+    const themeName =
+        theme === CUSTOM_THEME_ID
+            ? customCssName || t('profile.customTheme', 'Your own')
+            : THEMES.find((preset) => preset.id === theme)?.name ||
+              t('profile.defaultTheme', 'Default');
+
+    // The same for the background, but only once there is one to name: no
+    // background is the app as it looks, so it is not worth saying.
+    const backgroundName = contentBackground
+        ? CONTENT_BACKGROUNDS.find((bg) => bg.id === contentBackground)?.name ||
+          null
+        : null;
+
+    // And for the text: the size, with a note that it is bold.
+    const textName = [
+        t(`profile.textSizes.${textScale}`, 'Default'),
+        boldText ? t('profile.boldTextShort', 'bold') : null,
+    ]
+        .filter(Boolean)
+        .join(' \u00b7 ');
+
+    const customizeSummary = [themeName, textName, backgroundName]
+        .filter(Boolean)
+        .join(' \u00b7 ');
 
     return (
         <div>
@@ -108,7 +149,7 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
             {/* Mode */}
             <div className="mb-8">
                 <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
-                    {t('profile.theme', 'Theme')}
+                    {t('profile.mode', 'Mode')}
                 </h4>
                 <div className="inline-flex rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
                     <button
@@ -150,58 +191,112 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                 </div>
             </div>
 
-            {/* Colours */}
+            {/* Customize */}
             <div className="mb-8">
-                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                    {t('profile.palette', 'Colours')}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    {t(
-                        'profile.themeDescription',
-                        'Pick a theme. Every button, link and highlight follows it, in light and in dark mode.'
-                    )}
-                </p>
-                <ThemePicker
-                    theme={theme}
-                    onThemeChange={onThemeChange}
-                    customCss={customCss}
-                    customCssName={customCssName}
-                    onCustomCssChange={onCustomCssChange}
-                />
-            </div>
-
-            {/* Background */}
-            <div className="mb-8">
-                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <PhotoIcon className="w-4 h-4" />
-                    {t('profile.contentBackground', 'Background')}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    {t(
-                        'profile.contentBackgroundDescription',
-                        'Show a photo behind the main content area. Photos come from Unsplash and are credited to their photographers.'
-                    )}
-                </p>
-                <div
-                    className="grid grid-cols-3 sm:grid-cols-4 gap-3"
-                    data-testid="content-background-cards"
+                <CollapsibleSection
+                    title={t('profile.customize', 'Customize')}
+                    icon={<PaintBrushIcon className="h-4 w-4 text-blue-500" />}
+                    defaultOpen={false}
+                    summary={customizeSummary}
+                    testId="customize-section"
                 >
-                    <BackgroundCard
-                        label={t('profile.contentBackgroundNone', 'None')}
-                        selected={!contentBackground}
-                        onSelect={() => onContentBackgroundChange(null)}
-                    />
-                    {CONTENT_BACKGROUNDS.map((bg) => (
-                        <BackgroundCard
-                            key={bg.id}
-                            label={bg.name}
-                            caption={bg.photographer}
-                            imageUrl={contentBackgroundUrl(bg, 'thumb')}
-                            selected={contentBackground === bg.id}
-                            onSelect={() => onContentBackgroundChange(bg.id)}
-                        />
-                    ))}
-                </div>
+                    <div className="space-y-2">
+                        {/* The colours of the app. */}
+                        <CollapsibleSection
+                            variant="plain"
+                            title={t('profile.theme', 'Theme')}
+                            icon={
+                                <SwatchIcon className="h-4 w-4 text-gray-400" />
+                            }
+                            summary={themeName}
+                            testId="palette-section"
+                        >
+                            <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                                {t(
+                                    'profile.themeDescription',
+                                    'Pick a theme. Every button, link and highlight follows it, in light and in dark mode.'
+                                )}
+                            </p>
+                            <ThemePicker
+                                theme={theme}
+                                onThemeChange={onThemeChange}
+                                customCss={customCss}
+                                customCssName={customCssName}
+                                onCustomCssChange={onCustomCssChange}
+                            />
+                        </CollapsibleSection>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+                        {/* How big and how heavy the text is. */}
+                        <CollapsibleSection
+                            variant="plain"
+                            title={t('profile.text', 'Text')}
+                            icon={
+                                <BoldIcon className="h-4 w-4 text-gray-400" />
+                            }
+                            summary={textName}
+                            testId="text-section"
+                        >
+                            <TextOptions
+                                textScale={textScale}
+                                boldText={boldText}
+                                onTextScaleChange={onTextScaleChange}
+                                onBoldTextChange={onBoldTextChange}
+                            />
+                        </CollapsibleSection>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+                        {/* A photo behind the main content. */}
+                        <CollapsibleSection
+                            variant="plain"
+                            title={t('profile.contentBackground', 'Background')}
+                            icon={
+                                <PhotoIcon className="h-4 w-4 text-gray-400" />
+                            }
+                            summary={backgroundName}
+                            testId="background-section"
+                        >
+                            <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                                {t(
+                                    'profile.contentBackgroundDescription',
+                                    'Show a photo behind the main content area. Photos come from Unsplash and are credited to their photographers.'
+                                )}
+                            </p>
+                            <div
+                                className="grid grid-cols-3 sm:grid-cols-4 gap-3"
+                                data-testid="content-background-cards"
+                            >
+                                <BackgroundCard
+                                    label={t(
+                                        'profile.contentBackgroundNone',
+                                        'None'
+                                    )}
+                                    selected={!contentBackground}
+                                    onSelect={() =>
+                                        onContentBackgroundChange(null)
+                                    }
+                                />
+                                {CONTENT_BACKGROUNDS.map((bg) => (
+                                    <BackgroundCard
+                                        key={bg.id}
+                                        label={bg.name}
+                                        caption={bg.photographer}
+                                        imageUrl={contentBackgroundUrl(
+                                            bg,
+                                            'thumb'
+                                        )}
+                                        selected={contentBackground === bg.id}
+                                        onSelect={() =>
+                                            onContentBackgroundChange(bg.id)
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </CollapsibleSection>
+                    </div>
+                </CollapsibleSection>
             </div>
         </div>
     );

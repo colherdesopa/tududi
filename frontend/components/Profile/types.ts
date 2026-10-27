@@ -27,6 +27,10 @@ export interface UiSettingsAppearance {
     customCss?: string | null;
     // The name of that stylesheet, as it was uploaded.
     customCssName?: string | null;
+    // How big the text is, and whether it is bold (see
+    // frontend/constants/typography.ts).
+    textScale?: 'sm' | 'md' | 'lg' | 'xl';
+    boldText?: boolean;
 }
 
 export interface UiSettings {

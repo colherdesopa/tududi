@@ -42,6 +42,35 @@ describe('users validation: appearance', () => {
         ).toThrow(/Custom theme is too large/);
     });
 
+    it('keeps the size of the text', () => {
+        expect(validateAppearance({ textScale: 'lg' }).textScale).toBe('lg');
+    });
+
+    it('falls back to the default size of the text', () => {
+        expect(validateAppearance({ textScale: null }).textScale).toBe('md');
+        expect(validateAppearance({ textScale: '' }).textScale).toBe('md');
+    });
+
+    it('rejects a size of the text that is not a size', () => {
+        expect(() => validateAppearance({ textScale: 'huge' })).toThrow(
+            /Text size must be one of sm, md, lg, xl/
+        );
+        expect(() => validateAppearance({ textScale: 42 })).toThrow(
+            /Text size must be one of sm, md, lg, xl/
+        );
+    });
+
+    it('keeps the weight of the text', () => {
+        expect(validateAppearance({ boldText: true }).boldText).toBe(true);
+        expect(validateAppearance({ boldText: null }).boldText).toBe(false);
+    });
+
+    it('rejects a weight of the text that is not a weight', () => {
+        expect(() => validateAppearance({ boldText: 'yes' })).toThrow(
+            /Bold text must be true or false/
+        );
+    });
+
     it('rejects appearance settings that are not an object', () => {
         expect(() => validateAppearance(null)).toThrow(
             /Appearance settings must be an object/

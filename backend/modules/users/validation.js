@@ -101,6 +101,9 @@ const PALETTE_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 const MAX_CUSTOM_CSS_LENGTH = 64 * 1024;
 const MAX_CUSTOM_CSS_NAME_LENGTH = 128;
 
+// The size of the text: a scale on the root font size.
+const TEXT_SCALES = ['sm', 'md', 'lg', 'xl'];
+
 /**
  * Validate appearance settings. The palette is the id of a theme, the
  * stylesheet is the user's own CSS; the rest is passed through as it came
@@ -166,6 +169,30 @@ function validateAppearance(appearance) {
             );
         } else {
             result.customCssName = name;
+        }
+    }
+
+    if ('textScale' in result) {
+        const scale = result.textScale;
+        if (scale === null || scale === undefined || scale === '') {
+            result.textScale = 'md';
+        } else if (typeof scale !== 'string' || !TEXT_SCALES.includes(scale)) {
+            throw new ValidationError(
+                'Text size must be one of sm, md, lg, xl.',
+                'textScale'
+            );
+        }
+    }
+
+    if ('boldText' in result) {
+        const bold = result.boldText;
+        if (bold === null || bold === undefined) {
+            result.boldText = false;
+        } else if (typeof bold !== 'boolean') {
+            throw new ValidationError(
+                'Bold text must be true or false.',
+                'boldText'
+            );
         }
     }
 
