@@ -12,8 +12,13 @@ jest.mock('react-i18next', () => {
     return { useTranslation: () => value };
 });
 
-const renderTab = (contentBackground: string | null) => {
+const renderTab = (
+    contentBackground: string | null,
+    props: Partial<React.ComponentProps<typeof AppearanceTab>> = {}
+) => {
     const onContentBackgroundChange = jest.fn();
+    const onThemeChange = jest.fn();
+    const onCustomCssChange = jest.fn();
     render(
         <AppearanceTab
             isActive
@@ -21,9 +26,15 @@ const renderTab = (contentBackground: string | null) => {
             onAppearanceChange={jest.fn()}
             contentBackground={contentBackground}
             onContentBackgroundChange={onContentBackgroundChange}
+            theme={null}
+            onThemeChange={onThemeChange}
+            customCss=""
+            customCssName=""
+            onCustomCssChange={onCustomCssChange}
+            {...props}
         />
     );
-    return { onContentBackgroundChange };
+    return { onContentBackgroundChange, onThemeChange, onCustomCssChange };
 };
 
 const cards = () =>
@@ -65,5 +76,36 @@ describe('AppearanceTab background', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'None' }));
         expect(onContentBackgroundChange).toHaveBeenLastCalledWith(null);
+    });
+});
+
+describe('AppearanceTab theme', () => {
+    it('offers the theme picker', () => {
+        renderTab(null);
+
+        expect(screen.getByText('Theme')).toBeInTheDocument();
+        expect(screen.getByTestId('theme-cards')).toBeInTheDocument();
+        expect(screen.getByLabelText('Teal')).toBeInTheDocument();
+    });
+
+    it('reports the picked theme', () => {
+        const { onThemeChange } = renderTab(null);
+
+        fireEvent.click(screen.getByLabelText('Teal'));
+
+        expect(onThemeChange).toHaveBeenLastCalledWith('teal');
+    });
+
+    it('marks the chosen theme as pressed', () => {
+        renderTab(null, { theme: 'teal' });
+
+        expect(screen.getByLabelText('Teal')).toHaveAttribute(
+            'aria-pressed',
+            'true'
+        );
+        expect(screen.getByLabelText('Red')).toHaveAttribute(
+            'aria-pressed',
+            'false'
+        );
     });
 });

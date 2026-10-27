@@ -20,6 +20,13 @@ export interface Features {
 export interface UiSettingsAppearance {
     theme?: 'light' | 'dark' | 'system';
     contentBackground?: string | null;
+    // The id of the theme the app is painted with (see
+    // frontend/constants/themes.ts).
+    palette?: string | null;
+    // A stylesheet of the user's own, which sets the palette variables.
+    customCss?: string | null;
+    // The name of that stylesheet, as it was uploaded.
+    customCssName?: string | null;
 }
 
 export interface UiSettings {

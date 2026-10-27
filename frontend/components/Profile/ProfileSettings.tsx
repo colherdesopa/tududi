@@ -34,6 +34,11 @@ import { dispatchTelegramStatusChange } from '../../contexts/TelegramStatusConte
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import { getLocaleFirstDayOfWeek } from '../../utils/profileService';
 import {
+    applyCustomTheme,
+    applyTheme,
+    storeTheme,
+} from '../../constants/themes';
+import {
     getTimezonesByRegion,
     getRegionDisplayName,
 } from '../../utils/timezoneUtils';
@@ -162,6 +167,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         ui_settings: {
             appearance: {
                 theme: isDarkMode ? 'dark' : 'light',
+                palette: null,
+                customCss: '',
+                customCssName: '',
             },
         },
         notification_preferences: null,
@@ -595,6 +603,13 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                             contentBackground:
                                 data.ui_settings?.appearance
                                     ?.contentBackground ?? null,
+                            palette:
+                                data.ui_settings?.appearance?.palette ?? null,
+                            customCss:
+                                data.ui_settings?.appearance?.customCss ?? '',
+                            customCssName:
+                                data.ui_settings?.appearance?.customCssName ??
+                                '',
                         },
                     },
                     notification_preferences:
@@ -710,6 +725,21 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     }, [featureFlags.telegram, profile?.telegram_bot_token]);
 
     useEffect(() => {}, [updateKey, i18n.language]);
+
+    // Paint the theme that is staged, so a choice can be seen before it is
+    // saved. A theme has a light and a dark version, so it follows the mode.
+    useEffect(() => {
+        const appearance = formData.ui_settings?.appearance;
+        applyTheme(
+            appearance?.palette ?? null,
+            isDarkMode ? 'dark' : 'light'
+        );
+        applyCustomTheme(appearance?.customCss ?? '');
+    }, [
+        formData.ui_settings?.appearance?.palette,
+        formData.ui_settings?.appearance?.customCss,
+        isDarkMode,
+    ]);
 
     useEffect(() => {
         setFormData((prev) => ({
@@ -1348,6 +1378,16 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                     );
             }
 
+            if (updatedProfile.ui_settings?.appearance?.palette !== undefined) {
+                const theme =
+                    updatedProfile.ui_settings.appearance.palette ?? null;
+                applyTheme(theme, isDarkMode ? 'dark' : 'light');
+                applyCustomTheme(
+                    updatedProfile.ui_settings.appearance.customCss ?? ''
+                );
+                storeTheme(theme);
+            }
+
             if (updatedProfile.sidebar_settings?.visibleSections) {
                 useStore
                     .getState()
@@ -1581,6 +1621,45 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             },
                                         }))
                                     }
+                                    theme={
+                                        formData.ui_settings?.appearance
+                                            ?.palette ?? null
+                                    }
+                                    onThemeChange={(theme) => {
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            ui_settings: {
+                                                ...(prev.ui_settings || {}),
+                                                appearance: {
+                                                    ...(prev.ui_settings
+                                                        ?.appearance || {}),
+                                                    palette: theme,
+                                                },
+                                            },
+                                        }));
+                                    }}
+                                    customCss={
+                                        formData.ui_settings?.appearance
+                                            ?.customCss ?? ''
+                                    }
+                                    customCssName={
+                                        formData.ui_settings?.appearance
+                                            ?.customCssName ?? ''
+                                    }
+                                    onCustomCssChange={(customCss, name) => {
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            ui_settings: {
+                                                ...(prev.ui_settings || {}),
+                                                appearance: {
+                                                    ...(prev.ui_settings
+                                                        ?.appearance || {}),
+                                                    customCss,
+                                                    customCssName: name,
+                                                },
+                                            },
+                                        }));
+                                    }}
                                 />
 
                                 <SecurityTab

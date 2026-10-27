@@ -783,6 +783,10 @@
     "contentBackground": "Background",
     "contentBackgroundDescription": "Show a photo behind the main content area. Photos come from Unsplash and are credited to their photographers.",
     "contentBackgroundNone": "None",
+    "palette": "Colours",
+    "themeDescription": "Pick a theme. Every button, link and highlight follows it, in light and in dark mode.",
+    "uploadTheme": "Upload a theme",
+    "customThemeHint": "A stylesheet of your own. It sets the palette variables and overrides the theme above.",
     "photoBy": "Photo by",
     "photoOn": "on",
     "connected": {

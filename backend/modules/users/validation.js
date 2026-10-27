@@ -92,6 +92,86 @@ const SIDEBAR_ORDER_MAX_ID_LENGTH = 64;
 const SIDEBAR_WIDTH_MIN_PERCENT = 90;
 const SIDEBAR_WIDTH_MAX_PERCENT = 110;
 
+// The theme of the interface: the id of a preset, or 'custom' for a
+// stylesheet of the user's own.
+const PALETTE_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
+
+// A stylesheet of the user's own. It is added to the page as it is, so it
+// is kept small: a theme is a handful of variables, not a stylesheet.
+const MAX_CUSTOM_CSS_LENGTH = 64 * 1024;
+const MAX_CUSTOM_CSS_NAME_LENGTH = 128;
+
+/**
+ * Validate appearance settings. The palette is the id of a theme, the
+ * stylesheet is the user's own CSS; the rest is passed through as it came
+ * in.
+ */
+function validateAppearance(appearance) {
+    if (
+        appearance === null ||
+        typeof appearance !== 'object' ||
+        Array.isArray(appearance)
+    ) {
+        throw new ValidationError('Appearance settings must be an object.');
+    }
+
+    const result = { ...appearance };
+    if ('palette' in result) {
+        const palette = result.palette;
+        if (palette === null || palette === '') {
+            result.palette = null;
+        } else if (
+            typeof palette !== 'string' ||
+            !PALETTE_ID_PATTERN.test(palette.trim())
+        ) {
+            throw new ValidationError(
+                'Palette must be the id of a theme.',
+                'palette'
+            );
+        } else {
+            result.palette = palette.trim();
+        }
+    }
+
+    if ('customCss' in result) {
+        const customCss = result.customCss;
+        if (customCss === null || customCss === undefined) {
+            result.customCss = '';
+        } else if (typeof customCss !== 'string') {
+            throw new ValidationError(
+                'Custom theme must be a stylesheet.',
+                'customCss'
+            );
+        } else if (customCss.length > MAX_CUSTOM_CSS_LENGTH) {
+            throw new ValidationError(
+                'Custom theme is too large.',
+                'customCss'
+            );
+        } else {
+            result.customCss = customCss;
+        }
+    }
+
+    if ('customCssName' in result) {
+        const name = result.customCssName;
+        if (name === null || name === undefined) {
+            result.customCssName = '';
+        } else if (
+            typeof name !== 'string' ||
+            name.length > MAX_CUSTOM_CSS_NAME_LENGTH
+        ) {
+            throw new ValidationError(
+                'Custom theme name is too long.',
+                'customCssName'
+            );
+        } else {
+            result.customCssName = name;
+        }
+    }
+
+    return result;
+}
+
 /**
  * Validate sidebar settings.
  */
@@ -213,5 +293,6 @@ module.exports = {
     validateApiKeyName,
     validateExpiresAt,
     validateSidebarSettings,
+    validateAppearance,
     validateAiSettings,
 };

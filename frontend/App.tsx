@@ -65,6 +65,12 @@ import { setCurrentUser as setUserInStorage } from './utils/userUtils';
 import type { StarterResult } from './utils/onboardingService';
 import { getApiPath, getLocalesPath } from './config/paths';
 import { useStore } from './store/useStore';
+import {
+    applyCustomTheme,
+    applyTheme,
+    readStoredTheme,
+    storeTheme,
+} from './constants/themes';
 import { sanitizeFocus } from './utils/focus';
 import { invalidateProfileCache } from './utils/profileService';
 import { notifySwSession, notifySwClearCache } from './utils/swUtils';
@@ -89,6 +95,11 @@ const ProjectHistory = lazy(
 // string, and a lazy component created inside render would remount and
 // re-suspend on every navigation.
 const AdminUsersPage = lazy(() => import('./components/Admin/AdminUsersPage'));
+
+// Paint in the theme of the last session before the first render, so the
+// app does not flash the default palette. The profile replaces it with the
+// saved theme once it loads.
+applyTheme(readStoredTheme(), 'light');
 
 const App: React.FC = () => {
     const { i18n } = useTranslation();
@@ -171,6 +182,14 @@ const App: React.FC = () => {
                         data.user.ui_settings?.appearance?.contentBackground ??
                             null
                     );
+                // The theme the user saved in Profile > Appearance.
+                const palette =
+                    data.user.ui_settings?.appearance?.palette ?? null;
+                applyTheme(palette, isDarkMode ? 'dark' : 'light');
+                applyCustomTheme(
+                    data.user.ui_settings?.appearance?.customCss ?? ''
+                );
+                storeTheme(palette);
                 useStore
                     .getState()
                     .userSettingsStore.setSidebarVisibleSections(
@@ -329,6 +348,13 @@ const App: React.FC = () => {
             document.documentElement.classList.toggle('dark', isDarkMode);
         };
         updateTheme();
+
+        // A theme has a light and a dark version, so the palette follows the
+        // mode. A theme of the user's own is a stylesheet and does not.
+        const palette = readStoredTheme();
+        if (palette && palette !== 'custom') {
+            applyTheme(palette, isDarkMode ? 'dark' : 'light');
+        }
 
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const mediaListener = (e: MediaQueryListEvent) => {

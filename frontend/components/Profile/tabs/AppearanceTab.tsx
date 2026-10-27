@@ -14,6 +14,7 @@ import {
     CONTENT_BACKGROUNDS,
     contentBackgroundUrl,
 } from '../../../constants/contentBackgrounds';
+import ThemePicker from './ThemePicker';
 
 interface AppearanceTabProps {
     isActive: boolean;
@@ -21,6 +22,11 @@ interface AppearanceTabProps {
     onAppearanceChange: (appearance: 'light' | 'dark' | 'system') => void;
     contentBackground: string | null;
     onContentBackgroundChange: (background: string | null) => void;
+    theme: string | null;
+    onThemeChange: (theme: string) => void;
+    customCss: string;
+    customCssName: string;
+    onCustomCssChange: (css: string, name: string) => void;
 }
 
 interface BackgroundCardProps {
@@ -82,6 +88,11 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
     onAppearanceChange,
     contentBackground,
     onContentBackgroundChange,
+    theme,
+    onThemeChange,
+    customCss,
+    customCssName,
+    onCustomCssChange,
 }) => {
     const { t } = useTranslation();
 
@@ -94,7 +105,7 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                 {t('profile.appearance', 'Appearance')}
             </h3>
 
-            {/* Theme */}
+            {/* Mode */}
             <div className="mb-8">
                 <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
                     {t('profile.theme', 'Theme')}
@@ -137,6 +148,26 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         {t('profile.systemMode', 'System')}
                     </button>
                 </div>
+            </div>
+
+            {/* Colours */}
+            <div className="mb-8">
+                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                    {t('profile.palette', 'Colours')}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    {t(
+                        'profile.themeDescription',
+                        'Pick a theme. Every button, link and highlight follows it, in light and in dark mode.'
+                    )}
+                </p>
+                <ThemePicker
+                    theme={theme}
+                    onThemeChange={onThemeChange}
+                    customCss={customCss}
+                    customCssName={customCssName}
+                    onCustomCssChange={onCustomCssChange}
+                />
             </div>
 
             {/* Background */}

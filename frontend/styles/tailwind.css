@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The themeable palette.
+   Every blue utility in the app resolves to these variables (see
+   tailwind.config.js), so a theme is a stylesheet that sets them. The
+   defaults are Tailwind's built-in blue: an app without a theme looks
+   exactly as it does today.
+
+   The presets live in frontend/styles/themes.css, and a theme of the user's
+   own is a stylesheet that sets the same variables. The values are the space
+   separated channels Tailwind's `<alpha-value>` needs. */
+:where(:root) {
+  --theme-50: 239 246 255;
+  --theme-100: 219 234 254;
+  --theme-200: 191 219 254;
+  --theme-300: 147 197 253;
+  --theme-400: 96 165 250;
+  --theme-500: 59 130 246;
+  --theme-600: 37 99 235;
+  --theme-700: 29 78 216;
+  --theme-800: 30 64 175;
+  --theme-900: 30 58 138;
+  --theme-950: 23 37 84;
+}
+
 @layer base {
   html {
     /* Scale down everything by 10% by setting base font-size to 90% */

@@ -1,4 +1,12 @@
 /** @type {import('tailwindcss').Config} */
+
+// The palette is themeable: every shade resolves to a CSS variable, so a
+// theme recolours the app at runtime, without a rebuild. The variables are
+// set on <html> by frontend/constants/theme.ts; the presets live in
+// frontend/styles/themes.css and their defaults (Tailwind's built-in blue)
+// in frontend/styles/tailwind.css.
+const themeTone = (shade) => `rgb(var(--theme-${shade}) / <alpha-value>)`;
+
 module.exports = {
   darkMode: 'class',
   content: [
@@ -7,6 +15,21 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        blue: {
+          50: themeTone(50),
+          100: themeTone(100),
+          200: themeTone(200),
+          300: themeTone(300),
+          400: themeTone(400),
+          500: themeTone(500),
+          600: themeTone(600),
+          700: themeTone(700),
+          800: themeTone(800),
+          900: themeTone(900),
+          950: themeTone(950),
+        },
+      },
       spacing: {
         sidebar: 'var(--sidebar-width, 22rem)',
         rail: '3.5rem',
