@@ -1,6 +1,5 @@
+const fontPxToRem = require('./postcss-font-px-to-rem');
+
 module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
+    plugins: [require('tailwindcss'), fontPxToRem, require('autoprefixer')],
+};
