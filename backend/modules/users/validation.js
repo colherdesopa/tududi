@@ -99,7 +99,6 @@ const PALETTE_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 // A stylesheet of the user's own. It is added to the page as it is, so it
 // is kept small: a theme is a handful of variables, not a stylesheet.
 const MAX_CUSTOM_CSS_LENGTH = 64 * 1024;
-const MAX_CUSTOM_CSS_NAME_LENGTH = 128;
 
 // The size of the text: a scale on the root font size.
 const TEXT_SCALES = ['sm', 'md', 'lg', 'xl'];
@@ -152,23 +151,6 @@ function validateAppearance(appearance) {
             );
         } else {
             result.customCss = customCss;
-        }
-    }
-
-    if ('customCssName' in result) {
-        const name = result.customCssName;
-        if (name === null || name === undefined) {
-            result.customCssName = '';
-        } else if (
-            typeof name !== 'string' ||
-            name.length > MAX_CUSTOM_CSS_NAME_LENGTH
-        ) {
-            throw new ValidationError(
-                'Custom theme name is too long.',
-                'customCssName'
-            );
-        } else {
-            result.customCssName = name;
         }
     }
 

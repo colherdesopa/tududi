@@ -176,7 +176,6 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 theme: isDarkMode ? 'dark' : 'light',
                 palette: null,
                 customCss: '',
-                customCssName: '',
                 textScale: DEFAULT_TEXT_SCALE,
                 boldText: false,
             },
@@ -616,9 +615,6 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                 data.ui_settings?.appearance?.palette ?? null,
                             customCss:
                                 data.ui_settings?.appearance?.customCss ?? '',
-                            customCssName:
-                                data.ui_settings?.appearance?.customCssName ??
-                                '',
                             textScale: toTextScale(
                                 data.ui_settings?.appearance?.textScale
                             ),
@@ -1679,11 +1675,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                         formData.ui_settings?.appearance
                                             ?.customCss ?? ''
                                     }
-                                    customCssName={
-                                        formData.ui_settings?.appearance
-                                            ?.customCssName ?? ''
-                                    }
-                                    onCustomCssChange={(customCss, name) => {
+                                    onCustomCssChange={(customCss) => {
                                         setFormData((prev) => ({
                                             ...prev,
                                             ui_settings: {
@@ -1692,7 +1684,6 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                     ...(prev.ui_settings
                                                         ?.appearance || {}),
                                                     customCss,
-                                                    customCssName: name,
                                                 },
                                             },
                                         }));

@@ -1,11 +1,17 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { ArrowUpTrayIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import {
+    ArrowDownTrayIcon,
+    ArrowUpTrayIcon,
+    SwatchIcon,
+} from '@heroicons/react/24/outline';
 import {
     CUSTOM_THEME_ID,
+    DEFAULT_THEME_ID,
     THEMES,
     themeTones,
+    TONES,
     type Theme,
     type ThemeMode,
 } from '../../../constants/themes';
@@ -15,8 +21,7 @@ interface ThemePickerProps {
     onThemeChange: (theme: string) => void;
     // The stylesheet of the user's own, if there is one.
     customCss: string;
-    customCssName: string;
-    onCustomCssChange: (css: string, name: string) => void;
+    onCustomCssChange: (css: string) => void;
 }
 
 // A miniature of the app, painted in a theme: the sidebar, a heading, a
@@ -94,15 +99,52 @@ const ThemeCard: React.FC<{
     </button>
 );
 
+// The stylesheet a theme of the user's own is written against: every
+// variable the app reads, with the default tones beside it, so it is clear
+// which is which.
+const templateCss = (): string => {
+    const tones = themeTones(
+        THEMES.find((t) => t.id === 'blue')!,
+        'light'
+    );
+    const lines = TONES.map(
+        (tone) => `  --theme-${tone}: ${tones[`--theme-${tone}`]};`
+    );
+
+    return `/* Tududi theme
+ *
+ * The palette is eleven tones. Every button, link, badge and highlight in
+ * the app is painted with one of them, so setting these recolours it all.
+ *
+ * Each tone is three numbers: the red, green and blue channels, separated
+ * by spaces. The values below are the default theme; change them to make
+ * your own. A tone you leave out keeps the default.
+ *
+ * Put the same variables in a .dark rule to give the dark mode its own
+ * tones, or leave it out and the light ones are used in both.
+ */
+
+:root {
+${lines.join('\n')}
+}
+
+/*
+.dark {
+  --theme-400: 125 211 252;
+}
+*/
+`;
+};
+
 const ThemePicker: React.FC<ThemePickerProps> = ({
     theme,
     onThemeChange,
     customCss,
-    customCssName,
     onCustomCssChange,
 }) => {
     const { t } = useTranslation();
     const fileInput = useRef<HTMLInputElement>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const handleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -110,7 +152,7 @@ const ThemePicker: React.FC<ThemePickerProps> = ({
 
         const reader = new FileReader();
         reader.onload = () => {
-            onCustomCssChange(String(reader.result ?? ''), file.name);
+            onCustomCssChange(String(reader.result ?? ''));
             onThemeChange(CUSTOM_THEME_ID);
         };
         reader.readAsText(file);
@@ -118,46 +160,122 @@ const ThemePicker: React.FC<ThemePickerProps> = ({
         event.target.value = '';
     };
 
+    const downloadTemplate = () => {
+        const blob = new Blob([templateCss()], { type: 'text/css' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'tududi-theme.css';
+        link.click();
+        URL.revokeObjectURL(url);
+        setMenuOpen(false);
+    };
+
+    const isCustom = theme === CUSTOM_THEME_ID;
+
     return (
         <div>
             <div
                 className="grid grid-cols-2 sm:grid-cols-3 gap-3"
                 data-testid="theme-cards"
             >
+                <ThemeCard
+                    name={t('profile.defaultTheme', 'Default')}
+                    theme={
+                        THEMES.find((preset) => preset.id === 'blue') ??
+                        THEMES[0]
+                    }
+                    selected={!theme || theme === DEFAULT_THEME_ID}
+                    onSelect={() => {
+                        onThemeChange(DEFAULT_THEME_ID);
+                        onCustomCssChange('');
+                    }}
+                />
                 {THEMES.map((preset) => (
                     <ThemeCard
                         key={preset.id}
                         name={preset.name}
                         theme={preset}
                         selected={theme === preset.id}
-                        onSelect={() => onThemeChange(preset.id)}
+                        onSelect={() => {
+                            onThemeChange(preset.id);
+                            onCustomCssChange('');
+                        }}
                     />
                 ))}
-                <button
-                    type="button"
-                    onClick={() => fileInput.current?.click()}
-                    aria-pressed={theme === CUSTOM_THEME_ID}
-                    className="group text-left focus:outline-none"
-                >
-                    <div
-                        className={`flex h-full min-h-[76px] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-2 text-center ${
-                            theme === CUSTOM_THEME_ID
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                        }`}
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => setMenuOpen((previous) => !previous)}
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                        aria-pressed={isCustom}
+                        className="group w-full text-left focus:outline-none"
                     >
-                        {customCss ? (
-                            <DocumentTextIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                        ) : (
-                            <ArrowUpTrayIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                        )}
-                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 break-all">
-                            {customCss
-                                ? customCssName
-                                : t('profile.uploadTheme', 'Upload a theme')}
-                        </span>
-                    </div>
-                </button>
+                        <div
+                            className={`relative flex h-full min-h-[76px] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-2 text-center ${
+                                isCustom
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                            }`}
+                        >
+                            <SwatchIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                {t('profile.customTheme', 'Custom theme')}
+                            </span>
+                            {customCss && (
+                                <CheckCircleIcon className="absolute top-1 right-1 h-4 w-4 text-blue-600 dark:text-blue-400 drop-shadow" />
+                            )}
+                        </div>
+                    </button>
+
+                    {menuOpen && (
+                        <div
+                            role="menu"
+                            className="absolute right-0 z-20 mt-1 w-max min-w-[11rem] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                            data-testid="custom-theme-menu"
+                        >
+                            <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    fileInput.current?.click();
+                                }}
+                                className="flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                <ArrowUpTrayIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                                {t('profile.uploadTheme', 'Upload a .css file')}
+                            </button>
+                            <button
+                                type="button"
+                                role="menuitem"
+                                onClick={downloadTemplate}
+                                className="flex w-full items-center gap-2 whitespace-nowrap border-t border-gray-100 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                <ArrowDownTrayIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                                {t(
+                                    'profile.downloadTemplate',
+                                    'Download a template'
+                                )}
+                            </button>
+                            {customCss && (
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() => {
+                                        onCustomCssChange('');
+                                        onThemeChange(DEFAULT_THEME_ID);
+                                        setMenuOpen(false);
+                                    }}
+                                    className="flex w-full items-center gap-2 whitespace-nowrap border-t border-gray-100 px-3 py-2 text-left text-sm text-red-600 hover:bg-gray-50 dark:border-gray-700 dark:text-red-400 dark:hover:bg-gray-700"
+                                >
+                                    {t('profile.removeTheme', 'Remove it')}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <input

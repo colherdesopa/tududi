@@ -31,7 +31,6 @@ const renderTab = (
             theme={null}
             onThemeChange={onThemeChange}
             customCss=""
-            customCssName=""
             onCustomCssChange={onCustomCssChange}
             textScale="md"
             boldText={false}

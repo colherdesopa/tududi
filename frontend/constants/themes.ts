@@ -46,9 +46,15 @@ export const CUSTOM_THEME_ELEMENT_ID = 'tududi-custom-theme';
 // The id of the theme of the user's own.
 export const CUSTOM_THEME_ID = 'custom';
 
+// The look of the app with no theme at all: Tailwind's own blue, which is
+// what frontend/styles/tailwind.css sets as the default.
+export const DEFAULT_THEME_ID = 'default';
+
 export const isThemeId = (theme: unknown): theme is string =>
     typeof theme === 'string' &&
-    (theme === CUSTOM_THEME_ID || THEMES.some((preset) => preset.id === theme));
+    (theme === CUSTOM_THEME_ID ||
+        theme === DEFAULT_THEME_ID ||
+        THEMES.some((preset) => preset.id === theme));
 
 interface Rgb {
     r: number;

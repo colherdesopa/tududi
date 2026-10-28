@@ -31,8 +31,7 @@ interface AppearanceTabProps {
     theme: string | null;
     onThemeChange: (theme: string) => void;
     customCss: string;
-    customCssName: string;
-    onCustomCssChange: (css: string, name: string) => void;
+    onCustomCssChange: (css: string) => void;
     textScale: TextScale;
     boldText: boolean;
     onTextScaleChange: (scale: TextScale) => void;
@@ -101,7 +100,6 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
     theme,
     onThemeChange,
     customCss,
-    customCssName,
     onCustomCssChange,
     textScale,
     boldText,
@@ -116,7 +114,7 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
     // that holds it is closed.
     const themeName =
         theme === CUSTOM_THEME_ID
-            ? customCssName || t('profile.customTheme', 'Your own')
+            ? t('profile.customTheme', 'Custom theme')
             : THEMES.find((preset) => preset.id === theme)?.name ||
               t('profile.defaultTheme', 'Default');
 
@@ -221,7 +219,6 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                                 theme={theme}
                                 onThemeChange={onThemeChange}
                                 customCss={customCss}
-                                customCssName={customCssName}
                                 onCustomCssChange={onCustomCssChange}
                             />
                         </CollapsibleSection>
